@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PanCRM — Acceso</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600&display=swap');
+
+:root {
+  --brand: #C8860A;
+  --brand-dark: #9D6508;
+  --brand-light: #FEF3E2;
+  --bg: #FAFAF8;
+  --card: #FFFFFF;
+  --text: #1C1917;
+  --text-2: #57534E;
+  --text-3: #A8A29E;
+  --border: rgba(0,0,0,0.10);
+  --shadow: 0 4px 24px rgba(0,0,0,0.08);
+  --r: 16px;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: 'DM Sans', system-ui, sans-serif;
+  background: var(--bg);
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  overflow: hidden;
+}
+
+/* Fondo decorativo */
+body::before {
+  content: '';
+  position: fixed;
+  top: -200px; right: -200px;
+  width: 600px; height: 600px;
+  background: radial-gradient(circle, rgba(200,134,10,0.12) 0%, transparent 70%);
+  border-radius: 50%;
+  pointer-events: none;
+}
+body::after {
+  content: '';
+  position: fixed;
+  bottom: -150px; left: -150px;
+  width: 500px; height: 500px;
+  background: radial-gradient(circle, rgba(200,134,10,0.08) 0%, transparent 70%);
+  border-radius: 50%;
+  pointer-events: none;
+}
+
+.login-wrap {
+  width: 100%; max-width: 420px;
+  padding: 24px;
+  position: relative; z-index: 1;
+}
+
+.logo-section {
+  text-align: center;
+  margin-bottom: 32px;
+}
+.logo-icon {
+  width: 64px; height: 64px;
+  background: linear-gradient(135deg, var(--brand), var(--brand-dark));
+  border-radius: 20px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 32px;
+  margin: 0 auto 16px;
+  box-shadow: 0 8px 24px rgba(200,134,10,0.35);
+}
+.logo-title {
+  font-family: 'DM Serif Display', serif;
+  font-size: 32px;
+  color: var(--text);
+  letter-spacing: -0.03em;
+  line-height: 1;
+}
+.logo-sub {
+  font-size: 14px;
+  color: var(--text-3);
+  margin-top: 6px;
+}
+
+.card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  padding: 32px;
+  box-shadow: var(--shadow);
+}
+
+.tabs {
+  display: flex;
+  gap: 0;
+  background: #F5F4F0;
+  border-radius: 10px;
+  padding: 4px;
+  margin-bottom: 24px;
+}
+.tab {
+  flex: 1; text-align: center;
+  padding: 8px;
+  border-radius: 8px;
+  font-size: 13.5px; font-weight: 500;
+  cursor: pointer; color: var(--text-3);
+  transition: all 0.2s; border: none; background: none;
+  font-family: 'DM Sans', sans-serif;
+}
+.tab.active {
+  background: white;
+  color: var(--text);
+  font-weight: 600;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.10);
+}
+
+.form-group { margin-bottom: 16px; }
+.form-label {
+  display: block;
+  font-size: 12px; font-weight: 600;
+  color: var(--text-2);
+  margin-bottom: 6px;
+  text-transform: uppercase; letter-spacing: 0.06em;
+}
+.form-control {
+  width: 100%; padding: 11px 14px;
+  font-size: 14px; font-family: 'DM Sans', sans-serif;
+  border: 1.5px solid var(--border);
+  border-radius: 10px;
+  background: #FAFAF8;
+  color: var(--text);
+  transition: all 0.15s;
+  outline: none;
+}
+.form-control:focus {
+  border-color: var(--brand);
+  background: white;
+  box-shadow: 0 0 0 3px rgba(200,134,10,0.12);
+}
+
+.btn-submit {
+  width: 100%; padding: 13px;
+  font-size: 14px; font-weight: 600;
+  font-family: 'DM Sans', sans-serif;
+  background: linear-gradient(135deg, var(--brand), var(--brand-dark));
+  color: white; border: none;
+  border-radius: 10px; cursor: pointer;
+  transition: all 0.15s;
+  box-shadow: 0 4px 14px rgba(200,134,10,0.35);
+  margin-top: 4px;
+}
+.btn-submit:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 20px rgba(200,134,10,0.45);
+}
+.btn-submit:active { transform: translateY(0); }
+.btn-submit:disabled {
+  opacity: 0.6; cursor: not-allowed; transform: none;
+}
+
+.alert {
+  padding: 10px 14px; border-radius: 10px;
+  font-size: 13px; margin-bottom: 16px;
+  display: flex; align-items: center; gap: 8px;
+}
+.alert-error { background: #FEF2F2; color: #DC2626; border: 1px solid rgba(220,38,38,0.15); }
+.alert-success { background: #F0FDF4; color: #16A34A; border: 1px solid rgba(22,163,74,0.15); }
+
+.divider {
+  text-align: center; font-size: 12px; color: var(--text-3);
+  margin: 20px 0; position: relative;
+}
+.divider::before {
+  content: ''; position: absolute;
+  top: 50%; left: 0; right: 0; height: 1px;
+  background: var(--border);
+}
+.divider span { background: white; padding: 0 12px; position: relative; }
+
+.features {
+  display: grid; grid-template-columns: 1fr 1fr;
+  gap: 10px; margin-top: 24px;
+}
+.feature {
+  background: var(--brand-light);
+  border-radius: 10px; padding: 10px 12px;
+  font-size: 12px; color: var(--brand-dark);
+  display: flex; align-items: center; gap: 6px; font-weight: 500;
+}
+
+.hidden { display: none !important; }
+</style>
+</head>
+<body>
+
+<div class="login-wrap">
+  <div class="logo-section">
+    <div class="logo-icon">🍞</div>
+    <div class="logo-title">PanCRM</div>
+    <div class="logo-sub">Sistema de ventas para panaderías · Perú</div>
+  </div>
+
+  <div class="card">
+    <div class="tabs">
+      <button class="tab active" onclick="switchTab('login')">Iniciar sesión</button>
+      <button class="tab" onclick="switchTab('register')">Registrarse</button>
+    </div>
+
+    <div id="msg-container"></div>
+
+    <!-- LOGIN -->
+    <div id="form-login">
+      <div class="form-group">
+        <label class="form-label">Correo electrónico</label>
+        <input type="email" class="form-control" id="login-email" placeholder="correo@panaderia.com" autocomplete="email">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Contraseña</label>
+        <input type="password" class="form-control" id="login-pass" placeholder="••••••••" autocomplete="current-password">
+      </div>
+      <button class="btn-submit" onclick="login()" id="btn-login">Ingresar al sistema</button>
+      <div style="text-align:center;margin-top:14px;">
+        <a href="#" onclick="switchTab('forgot')" style="font-size:12px;color:var(--text-3);text-decoration:none;">¿Olvidaste tu contraseña?</a>
+      </div>
+    </div>
+
+    <!-- REGISTRO -->
+    <div id="form-register" class="hidden">
+      <div class="form-group">
+        <label class="form-label">Nombre de la panadería</label>
+        <input type="text" class="form-control" id="reg-panaderia" placeholder="Ej: Panadería La Buena Masa">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Correo electrónico</label>
+        <input type="email" class="form-control" id="reg-email" placeholder="correo@panaderia.com" autocomplete="email">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Contraseña</label>
+        <input type="password" class="form-control" id="reg-pass" placeholder="Mínimo 6 caracteres" autocomplete="new-password">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Confirmar contraseña</label>
+        <input type="password" class="form-control" id="reg-pass2" placeholder="Repetir contraseña">
+      </div>
+      <button class="btn-submit" onclick="register()" id="btn-register">Crear cuenta gratis</button>
+    </div>
+
+    <!-- RECUPERAR CONTRASEÑA -->
+    <div id="form-forgot" class="hidden">
+      <p style="font-size:13px;color:var(--text-2);margin-bottom:16px;">Ingresa tu correo y te enviaremos un enlace para restablecer tu contraseña.</p>
+      <div class="form-group">
+        <label class="form-label">Correo electrónico</label>
+        <input type="email" class="form-control" id="forgot-email" placeholder="correo@panaderia.com">
+      </div>
+      <button class="btn-submit" onclick="resetPassword()" id="btn-forgot">Enviar enlace</button>
+      <div style="text-align:center;margin-top:14px;">
+        <a href="#" onclick="switchTab('login')" style="font-size:12px;color:var(--text-3);text-decoration:none;">← Volver al inicio de sesión</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- Features bajo el card solo en login/register -->
+  <div class="features" id="features-section">
+    <div class="feature">📊 Ventas en tiempo real</div>
+    <div class="feature">🧾 Boletas y facturas SUNAT</div>
+    <div class="feature">🌾 Control de insumos</div>
+    <div class="feature">☁️ Acceso desde cualquier lugar</div>
+  </div>
+</div>
+
+<script>
+// ============================================================
+// CONFIGURACIÓN SUPABASE — Reemplaza con tus credenciales
+// ============================================================
+const SUPABASE_URL = 'https://woexrbzkbjicsbwjliym.supabase.co/rest/v1/';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndvZXhyYnprYmppY3Nid2psaXltIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc4NDk3MzksImV4cCI6MjA5MzQyNTczOX0.DRJhJTHesFZbE4SLojawo9C2tD9g4mMRghjgpJf3KqI';
+// ============================================================
+
+const { createClient } = supabase;
+const sb = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+// Verificar si ya hay sesión activa
+sb.auth.getSession().then(({ data: { session } }) => {
+  if(session) window.location.href = 'app.html';
+});
+
+function switchTab(tab) {
+  document.getElementById('form-login').classList.add('hidden');
+  document.getElementById('form-register').classList.add('hidden');
+  document.getElementById('form-forgot').classList.add('hidden');
+  document.getElementById('form-'+tab).classList.remove('hidden');
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  const tabMap = {login:0, register:1, forgot:0};
+  document.querySelectorAll('.tab')[tabMap[tab]||0].classList.add('active');
+  clearMsg();
+}
+
+function showMsg(msg, tipo='error') {
+  const el = document.getElementById('msg-container');
+  el.innerHTML = `<div class="alert alert-${tipo}">
+    ${tipo==='error'?'⚠️':'✓'} ${msg}
+  </div>`;
+}
+function clearMsg() { document.getElementById('msg-container').innerHTML=''; }
+
+async function login() {
+  const email = document.getElementById('login-email').value.trim();
+  const pass  = document.getElementById('login-pass').value;
+  if(!email||!pass){showMsg('Completa todos los campos.');return;}
+  const btn = document.getElementById('btn-login');
+  btn.disabled=true; btn.textContent='Ingresando...';
+  const {error} = await sb.auth.signInWithPassword({email,password:pass});
+  if(error){showMsg(error.message==='Invalid login credentials'?'Correo o contraseña incorrectos.':error.message);btn.disabled=false;btn.textContent='Ingresar al sistema';return;}
+  window.location.href='app.html';
+}
+
+async function register() {
+  const panaderia = document.getElementById('reg-panaderia').value.trim();
+  const email     = document.getElementById('reg-email').value.trim();
+  const pass      = document.getElementById('reg-pass').value;
+  const pass2     = document.getElementById('reg-pass2').value;
+  if(!panaderia||!email||!pass){showMsg('Completa todos los campos.');return;}
+  if(pass!==pass2){showMsg('Las contraseñas no coinciden.');return;}
+  if(pass.length<6){showMsg('La contraseña debe tener al menos 6 caracteres.');return;}
+  const btn = document.getElementById('btn-register');
+  btn.disabled=true; btn.textContent='Creando cuenta...';
+  const {data,error} = await sb.auth.signUp({
+    email, password:pass,
+    options:{ data:{ panaderia_nombre: panaderia } }
+  });
+  if(error){showMsg(error.message);btn.disabled=false;btn.textContent='Crear cuenta gratis';return;}
+  // Actualizar nombre de panadería
+  if(data.user){
+    await sb.from('panaderias').update({nombre:panaderia}).eq('user_id',data.user.id);
+  }
+  showMsg('¡Cuenta creada! Revisa tu correo para confirmar.','success');
+  btn.disabled=false; btn.textContent='Crear cuenta gratis';
+}
+
+async function resetPassword() {
+  const email = document.getElementById('forgot-email').value.trim();
+  if(!email){showMsg('Ingresa tu correo.');return;}
+  const btn = document.getElementById('btn-forgot');
+  btn.disabled=true; btn.textContent='Enviando...';
+  const {error} = await sb.auth.resetPasswordForEmail(email,{redirectTo:window.location.origin+'/reset.html'});
+  if(error){showMsg(error.message);btn.disabled=false;btn.textContent='Enviar enlace';return;}
+  showMsg('¡Enlace enviado! Revisa tu correo.','success');
+  btn.disabled=false; btn.textContent='Enviar enlace';
+}
+
+// Enter para enviar
+document.addEventListener('keydown', e => {
+  if(e.key==='Enter'){
+    if(!document.getElementById('form-login').classList.contains('hidden')) login();
+    else if(!document.getElementById('form-register').classList.contains('hidden')) register();
+  }
+});
+</script>
+</body>
+</html>
